@@ -26,9 +26,8 @@ type v4f = vec4<f32>;
 
 
 struct Particle {
-    p: v2f;
-    v: v2f;
-    a: v2f;
+    p: v3f;
+    v: v3f;
 };
 struct ParticleBuffer {
     buff: array<Particle>;

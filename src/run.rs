@@ -7,8 +7,14 @@ use winit::{
 };
 use std::sync::mpsc::channel;
 // use anyhow::{Result, Context};
+use rand::{
+    self,
+    distributions::{Uniform, Distribution},
+};
+pub type Rng = rand::prelude::ThreadRng;
 
 use super::shader_importer;
+use super::vec3d::Vec3d;
 
 const M: u32 = 1;
 const RENDER_WIDTH: u32 = 1920*M;
@@ -219,12 +225,20 @@ impl State {
         vertex_buffer
     }
 
-    fn get_bind_group(device: &wgpu::Device, buff: &wgpu::Buffer, stuff: &Stuff, texture_view: &wgpu::TextureView) -> (wgpu::BindGroup, wgpu::BindGroupLayout, wgpu::Buffer, wgpu::Buffer) {
-        let compute_buffer = device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
+    fn get_compute_buffer(device: &wgpu::Device) -> wgpu::Buffer {
+        let sampler = Uniform::new(-1.0, 1.0);
+        let mut rng = rand::thread_rng();
+        let particles = Particle::get_n_randomised(1000000, &mut rng, sampler);
+
+        device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
             label: Some(&format!("Compute Buffer")),
-            contents: bytemuck::cast_slice(&vec![0u32 ; 1080*1920*(2+2+1+1)]),
-            usage: wgpu::BufferUsages::VERTEX | wgpu::BufferUsages::STORAGE | wgpu::BufferUsages::COPY_DST,
-        });
+            contents: bytemuck::cast_slice(&particles),
+            usage: wgpu::BufferUsages::VERTEX | wgpu::BufferUsages::STORAGE | wgpu::BufferUsages::COPY_DST | wgpu::BufferUsages::MAP_READ,
+        })
+    }
+
+    fn get_bind_group(device: &wgpu::Device, buff: &wgpu::Buffer, stuff: &Stuff, texture_view: &wgpu::TextureView) -> (wgpu::BindGroup, wgpu::BindGroupLayout, wgpu::Buffer, wgpu::Buffer) {
+        let compute_buffer = Self::get_compute_buffer(device);
 
         let stuff_buffer = device.create_buffer_init(
             &wgpu::util::BufferInitDescriptor {
@@ -248,7 +262,7 @@ impl State {
                     count: None,
                 },
                 wgpu::BindGroupLayoutEntry {
-                    binding: 1, // Buffer
+                    binding: 1, // compute buffer
                     visibility: wgpu::ShaderStages::COMPUTE | wgpu::ShaderStages::FRAGMENT,
                     ty: wgpu::BindingType::Buffer {
                         ty: wgpu::BufferBindingType::Storage { read_only: false },
@@ -427,9 +441,9 @@ impl State {
                             VirtualKeyCode::R => {
                                 self.reset_buffers(true);
                             },
-                            VirtualKeyCode::P => {
-                                self.dump_render();
-                            },
+                            // VirtualKeyCode::P => {
+                            //     self.dump_render();
+                            // },
                             _ => return false,
                         }
                     },
@@ -764,6 +778,41 @@ pub fn window_event_loop() {
 pub fn main() {
     window_event_loop();
     // render_to_image(); ! only does plotquations. need to add a way to choose what shader to run
+}
+
+#[repr(C)]
+#[derive(Clone, Copy, Debug, bytemuck::Pod, bytemuck::Zeroable)]
+struct Particle {
+    p: Vec3d,
+    v: Vec3d,
+}
+
+impl Particle {
+    fn zero() -> Self {
+        Self {
+            p: Vec3d::zero(),
+            v: Vec3d::zero(),
+        }
+    }
+
+    fn random(rng: &mut Rng, sampler: Uniform<f32>) -> Self {
+        Self {
+            p: Vec3d::new(
+                sampler.sample(rng),
+                sampler.sample(rng),
+                0.0,
+            ),
+            v: Vec3d::new(
+                sampler.sample(rng),
+                sampler.sample(rng),
+                0.0,
+            ),
+        }
+    }
+
+    fn get_n_randomised(n: usize, rng: &mut Rng, sampler: Uniform<f32>) -> Vec<Self> {
+        (0..n).into_iter().map(|_| Self::random(rng, sampler)).collect()
+    }
 }
 
 fn file_name() -> String {

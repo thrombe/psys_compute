@@ -1,19 +1,20 @@
-// this file is copied from thrombe/fracGen look there for history
-// this file was originally named Vec4d but was later modified after copying
 
-// should i inline everything???
+use bytemuck;
 
-#[derive(Debug, Clone, Copy)] // is copy good for this???
+use std::ops::{Add, Sub, Mul, AddAssign, SubAssign, MulAssign};
+
+#[repr(C)]
+#[derive(Clone, Copy, Debug, bytemuck::Pod, bytemuck::Zeroable)]
 pub struct Vec3d {
-    pub x: f64,
-    pub y: f64,
-    pub z: f64,
+    pub x: f32,
+    pub y: f32,
+    pub z: f32,
 }
 
 impl Vec3d {
 
     #[inline(always)]
-    pub fn new(x: f64, y: f64, z: f64) -> Self {
+    pub fn new(x: f32, y: f32, z: f32) -> Self {
         Self {x, y, z}
     }
 
@@ -24,7 +25,7 @@ impl Vec3d {
 
     /// lerp, but chopped at t = 0 and t = 1
     #[inline(always)]
-    pub fn lerp_with_chop(&self, other: Self, t: f64) -> Self {
+    pub fn lerp_with_chop(&self, other: Self, t: f32) -> Self {
         if t > 1.0 {return *self}
         if t < 0.0 {return other}
         *self*t + other*(1.0-t)
@@ -32,12 +33,12 @@ impl Vec3d {
 
     /// returns self*t + other*(1-t)
     #[inline(always)]
-    pub fn lerp(&self, other: Self, t: f64) -> Self {
+    pub fn lerp(&self, other: Self, t: f32) -> Self {
         *self*t + other*(1.0-t)
     }
 
     #[inline(always)]
-    pub fn size(&self) -> f64 {
+    pub fn size(&self) -> f32 {
         (self.dot(*self)).sqrt()
     }
 
@@ -52,12 +53,12 @@ impl Vec3d {
     }
 
     #[inline(always)]
-    pub fn dot(&self, other: Self) -> f64 {
+    pub fn dot(&self, other: Self) -> f32 {
         self.x * other.x + self.y * other.y + self.z * other.z
     }
 
     #[inline(always)]
-    pub fn len_sq(&self) -> f64 {
+    pub fn len_sq(&self) -> f32 {
         self.dot(*self)
     }
     
@@ -81,7 +82,6 @@ impl Vec3d {
     }
 }
 
-use std::ops::{Add, Sub, Mul, AddAssign, SubAssign, MulAssign};
 impl Add for Vec3d {
     type Output = Self;
 
@@ -122,11 +122,11 @@ impl Sub for Vec3d {
 //     }
 // }
 
-impl Mul<f64> for Vec3d {
+impl Mul<f32> for Vec3d {
     type Output = Self;
 
     #[inline(always)]
-    fn mul(self, t: f64) -> Self {
+    fn mul(self, t: f32) -> Self {
         Self {
             x: self.x * t,
             y: self.y * t,
@@ -150,9 +150,9 @@ impl SubAssign for Vec3d {
         self.z = self.z - other.z;
     }
 }
-impl MulAssign<f64> for Vec3d {
+impl MulAssign<f32> for Vec3d {
     #[inline(always)]
-    fn mul_assign(&mut self, t: f64) {
+    fn mul_assign(&mut self, t: f32) {
         self.x = self.x * t;
         self.y = self.y * t;
         self.z = self.z * t;

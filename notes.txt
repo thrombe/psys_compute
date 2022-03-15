@@ -17,7 +17,9 @@ custom commands:
   . /// work_group_count 64
 
 bugs:
-  . 
+  . last 25% of the particles get stuck at origin
+  . stuff happens while converting from cpu to gpu and particle coords switch places
+  . cannot handle 10^6 particles
 
 plan:
   . 
