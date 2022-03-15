@@ -1,6 +1,7 @@
 use std::collections::HashMap;
 
 
+#[derive(Clone, Debug)]
 pub struct Importer {
     pub compute: bool,
     pub work_group_count: Option<u32>,

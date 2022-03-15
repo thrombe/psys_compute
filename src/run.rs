@@ -39,7 +39,6 @@ struct State {
     vertex_buffer: wgpu::Buffer,
     num_vertices: u32,
     
-    active_shader: ActiveShader,
     importer: shader_importer::Importer,
     compile_status: bool,
     shader_code: Option<String>,
@@ -93,13 +92,11 @@ impl State {
         let (bind_group, bind_group_layouts, stuff_buffer, compute_buffer) = Self::get_bind_group(&device, &screen_buffer, &Stuff::new(), &compute_texture_view);
         let vertex_buffer = Self::get_vertex_buffer(&device);
 
-        let active_shader = ActiveShader::Plotquations;
-
         let mut state = Self { 
             surface: Some(surface), device, queue, config: Some(config), size: Some(size), render_pipeline: None, compute_pipeline: None, work_group_count: 1,
             vertex_buffer, num_vertices: VERTICES.len() as u32,
             stuff: Stuff::new(), bind_group_layouts, bind_group, stuff_buffer, compute_buffer,
-            importer: shader_importer::Importer::new(&active_shader.to_string()), active_shader,
+            importer: shader_importer::Importer::new("src/main.wgsl"),
             compile_status: false,
             shader_code: None,
             time: std::time::Instant::now(),
@@ -144,13 +141,11 @@ impl State {
         stuff.windowless = 1;
         let (bind_group, bind_group_layouts, stuff_buffer, compute_buffer) = Self::get_bind_group(&device, &screen_buffer, &stuff, &compute_texture_view);
         
-        let active_shader = ActiveShader::Plotquations;
-
         let mut state = Self {
             surface: None, size: None, device, queue, config: None, render_pipeline: None, compute_pipeline: None, work_group_count: 1,
             vertex_buffer, num_vertices: VERTICES.len() as u32,
             stuff: Stuff::new(), bind_group_layouts, bind_group, stuff_buffer, compute_buffer,
-            importer: shader_importer::Importer::new(&active_shader.to_string()), active_shader,
+            importer: shader_importer::Importer::new("src/main.wgsl"),
             compile_status: false,
             shader_code: None,
             time: std::time::Instant::now(),
@@ -279,8 +274,6 @@ impl State {
                         access: wgpu::StorageTextureAccess::ReadWrite,
                         format: wgpu::TextureFormat::Rgba32Float,
                         view_dimension: wgpu::TextureViewDimension::D2,
-                        // multisampled: false,
-                        // sample_type: wgpu::TextureSampleType::Float { filterable: true },
                     },
                     count: None,
                 }
@@ -362,8 +355,7 @@ impl State {
         state.stuff_buffer = stuff_buffer;
         state.compute_buffer = compute_buffer;
         
-        state.active_shader = self.active_shader;
-        state.importer = shader_importer::Importer::new(&state.active_shader.to_string());
+        state.importer = self.importer.clone();
         // state.importer.compute = false;
         state.compile();
 
@@ -437,27 +429,6 @@ impl State {
                             },
                             VirtualKeyCode::P => {
                                 self.dump_render();
-                            },
-                            VirtualKeyCode::Key1 => {
-                                self.active_shader = ActiveShader::Plotquations;
-                                self.importer = shader_importer::Importer::new(&self.active_shader.to_string());
-                                if self.compile() {
-                                    self.reset_buffers(false);
-                                }
-                            },
-                            VirtualKeyCode::Key2 => {
-                                self.active_shader = ActiveShader::Buddhabrot;
-                                self.importer = shader_importer::Importer::new(&self.active_shader.to_string());
-                                if self.compile() {
-                                    self.reset_buffers(false);
-                                }
-                            },
-                            VirtualKeyCode::Key3 => {
-                                self.active_shader = ActiveShader::Mandlebrot;
-                                self.importer = shader_importer::Importer::new(&self.active_shader.to_string());
-                                if self.compile() {
-                                    self.reset_buffers(false);
-                                }
                             },
                             _ => return false,
                         }
@@ -793,23 +764,6 @@ pub fn window_event_loop() {
 pub fn main() {
     window_event_loop();
     // render_to_image(); ! only does plotquations. need to add a way to choose what shader to run
-}
-
-#[derive(Clone, Copy, Debug)]
-enum ActiveShader {
-    Plotquations,
-    Buddhabrot,
-    Mandlebrot,
-}
-
-impl ToString for ActiveShader {
-    fn to_string(&self) -> String {
-        match self {
-            Self::Plotquations => "./src/plotquations.wgsl",
-            Self::Buddhabrot => "./src/buddhabrot.wgsl",
-            Self::Mandlebrot => "./src/mandlebrot.wgsl",
-        }.to_owned()
-    }
 }
 
 fn file_name() -> String {

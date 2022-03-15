@@ -1,2 +1,2 @@
-# fracgen_gpu
-generating fractals on gpu
+# psys_compute
+simulating a particle system on gpu

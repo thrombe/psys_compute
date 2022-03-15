@@ -1,6 +1,4 @@
 
-// https://gpuweb.github.io/gpuweb/wgsl/#builtin-functions
-
 struct Stuff {
     render_width: u32;
     render_height: u32;
@@ -27,27 +25,27 @@ type v3f = vec3<f32>;
 type v4f = vec4<f32>;
 
 
-struct TrajectoryPoint {
-    z: v2f;
-    c: v2f;
-    iter: u32;
-    b: u32;
+struct Particle {
+    p: v2f;
+    v: v2f;
+    a: v2f;
 };
-struct TrajectoryBuffer {
-    // buff: [[stride(4)]] array<u32>; // stride is the length of the element in array in bytes
-    buff: array<TrajectoryPoint>;
+struct ParticleBuffer {
+    buff: array<Particle>;
 };
 [[group(0), binding(1)]]
-var<storage, read_write> compute_buffer: TrajectoryBuffer;
+var<storage, read_write> particle_buffer: ParticleBuffer;
 
 
 struct Buf {
-    buf: array<u32>;
+    buff: array<u32>;
 };
 [[group(0), binding(2)]]
-var<storage, read_write> buf: Buf;
+var<storage, read_write> screen_buffer: Buf;
 
 
 [[group(0), binding(3)]]
-var compute_texture: texture_storage_2d<rgba32float, read_write>;
+var screen_texture: texture_storage_2d<rgba32float, read_write>;
 
+/// import src/vertex.wgsl
+/// import src/compute.wgsl

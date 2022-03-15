@@ -1,5 +1,5 @@
 [package]
-name = "fracgen_gpu"
+name = "psys_compute"
 version = "0.1.0"
 edition = "2021"
 
