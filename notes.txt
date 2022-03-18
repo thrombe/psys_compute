@@ -22,4 +22,7 @@ bugs:
   . cannot handle 10^6 particles
 
 plan:
-  . 
+  . seperate the stuff in the main_compute func in multiple funtions
+    . modularity++
+    . easy swaps
+    . can do stuff like different behaviour depending on ramdomness/some condition

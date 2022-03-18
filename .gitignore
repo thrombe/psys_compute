@@ -1,4 +1,5 @@
 target/
 ref/
 images/*
+!images/ss_*.*
 .vscode
